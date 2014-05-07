@@ -191,6 +191,7 @@ permutes_prob <- function(mat, iter = 100){
 
 
 #' @title make_null
+#' 
 #' This function generates a null distribution of matrices by maintaining column sums
 #' @param mat a binary matrix
 #' @param iter the number of null matrices to create. Defaults to 100
