@@ -8,4 +8,4 @@ Maintainer: Jonathan J. Borrelli <borrejj@gmail.com>
 Description: Use any of five potential null models to create a null distribution of binary matrices. 
              Null models available include maintianing row and/or column sums or probabilities and 
              a probabilistic null. 
-License: What license is it under?
+License: MIT License
