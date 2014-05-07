@@ -13,4 +13,9 @@ permutes_c(mat, iter = 100)
 \description{
 This function generates a null distribution of matrices by maintaining column sums
 }
+\seealso{
+Other null.models: \code{\link{permutes_prob}};
+  \code{\link{permutes_rcd}}; \code{\link{permutes_rc}};
+  \code{\link{permutes_r}}
+}
 

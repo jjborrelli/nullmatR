@@ -1,8 +1,9 @@
-#' @title permutes_r
+#' @title Permute a matrix
 #' @description This function generates a null distribution of matrices by maintaining row sums
 #' @param mat a binary matrix
 #' @param iter the number of null matrices to create. Defaults to 100
 #' @export
+#' @family null models
 
 permutes_r <- function(mat, iter = 100){
   
@@ -43,6 +44,7 @@ permutes_r <- function(mat, iter = 100){
 #' @param mat a binary matrix
 #' @param iter the number of null matrices to create. Defaults to 100
 #' @export
+#' @family null models
 
 permutes_c <- function(mat, iter = 100){
   
@@ -83,6 +85,7 @@ permutes_c <- function(mat, iter = 100){
 #' @param mat a binary matrix
 #' @param iter the number of null matrices to create. Defaults to 100
 #' @export
+#' @family null models
 
 permutes_rc <- function(mat, iter = 100){
  
@@ -123,6 +126,7 @@ permutes_rc <- function(mat, iter = 100){
 #' @param mat a binary matrix
 #' @param iter the number of null matrices to create. Defaults to 100
 #' @export
+#' @family null models
 
 permutes_rcd <- function(mat, iter = 100){
   
@@ -163,6 +167,7 @@ permutes_rcd <- function(mat, iter = 100){
 #' @param mat a binary matrix
 #' @param iter the number of null matrices to create. Defaults to 100
 #' @export
+#' @family null models
 
 permutes_prob <- function(mat, iter = 100){
   cS <- colSums(mat)/nrow(mat)
