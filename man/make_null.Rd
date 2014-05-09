@@ -13,6 +13,6 @@ make_null(mat, iter = 100, method = "rc")
 \item{method}{which null model you want to use. Defaults to method = "rc}
 }
 \description{
-This function generates a null distribution of matrices by maintaining column sums
+This function generates a null distribution of matrices using one of 5 methods
 }
 
