@@ -1,217 +1,74 @@
-#' @title Permute a matrix
-#' @description This function generates a null distribution of matrices by maintaining row sums
-#' @param mat a binary matrix
-#' @param iter the number of null matrices to create. Defaults to 100
-#' @export
-#' @family null models
+library(igraph)
+library(bipartite)
 
-permutes_r <- function(mat, iter = 100){
-  
-  pattern1 <- matrix(c(0,1), nrow = 1, ncol = 2)
-  pattern2 <- matrix(c(1,0), nrow = 1, ncol = 2)
-  count <- 0
-  
-  mat.list <- list()
-  
-  while(count < iter){
-    srow <- sample(1:nrow(mat), 1)
-    scol <- sample(1:ncol(mat), 2)
+
+
+
+###
+### CURVE-BALL ALGORITHM
+###
+# Strona, G. et al. 2014. A fast and unbiased procedure to randomize 
+# ecological binary matrices with fixed row and column totals.
+# -Nat. Comm. 5: 4114. [doi: 10.1038/ncomms5114]
+# (http://www.nature.com/ncomms/2014/140611/ncomms5114/full/ncomms5114.html)
+
+curve_ball<-function(m){
+  RC=dim(m)
+  R=RC[1]
+  C=RC[2]
+  hp=list()
+  for (row in 1:dim(m)[1]) {hp[[row]]=(which(m[row,]==1))}
+  l_hp=length(hp)
+  for (rep in 1:(5*l_hp)){
+    AB=sample(1:l_hp,2)
+    a=hp[[AB[1]]]
+    b=hp[[AB[2]]]
+    ab=intersect(a,b)
+    l_ab=length(ab)
+    l_a=length(a)
+    l_b=length(b)
+    if ((l_ab %in% c(l_a,l_b))==F){
+      tot=setdiff(c(a,b),ab)
+      l_tot=length(tot)
+      tot=sample(tot, l_tot, replace = FALSE, prob = NULL)
+      L=l_a-l_ab
+      hp[[AB[1]]] = c(ab,tot[1:L])
+      hp[[AB[2]]] = c(ab,tot[(L+1):l_tot])}
     
-    test <- mat[srow, scol]
-    
-    if(sum(test == pattern1) == 2){
-      count <- count + 1
-      mat[srow, scol] <- pattern2
-      mat.list[[count]] <- mat
-      
-      next
-    } else if(sum(test == pattern2) == 2){
-      count <- count + 1
-      mat[srow, scol] <- pattern1
-      mat.list[[count]] <- mat
-      
-      next
-    } else {next}
   }
+  rm=matrix(0,R,C)
+  for (row in 1:R){rm[row,hp[[row]]]=1}
+  rm
+}
+
+curving <- function(adjmat, n){
+  newmat <- lapply(1:n, function(x) matrix(0, nrow(adjmat), ncol(adjmat)))
+  newmat[[1]] <- adjmat
   
-  matrices <- lapply(mat.list, as.matrix)
-  return(permuted.matrices = matrices)
+  for(i in 2:n){
+    newmat[[i]] <- curve_ball(newmat[[i-1]])
+  }
+  return(newmat)
 }
 
 
-#' @title permutes_c
-#' @description This function generates a null distribution of matrices by maintaining column sums
-#' @param mat a binary matrix
-#' @param iter the number of null matrices to create. Defaults to 100
-#' @export
-#' @family null models
 
-permutes_c <- function(mat, iter = 100){
+
+testcurve <- function(N, C, n){
+  rg <- erdos.renyi.game(N, C, "gnp")
+  rm <- get.adjacency(rg, sparse = F)
   
-  pattern1 <- matrix(c(0,1), nrow = 2, ncol = 1)
-  pattern2 <- matrix(c(1,0), nrow = 2, ncol = 1)
-  count <- 0
+  cb <- curving(rm, n)
+  csc <- sapply(cb, C.score)
+  p1 <- sum(csc <= csc[[1]])/n
+  p2 <- sum(csc >= csc[[1]])/n
   
-  mat.list <- list()
-  
-  while(count < iter){
-    srow <- sample(1:nrow(mat), 2)
-    scol <- sample(1:ncol(mat), 1)
-    
-    test <- mat[srow, scol]
-    
-    if(sum(test == pattern1) == 2){
-      count <- count + 1
-      mat[srow, scol] <- pattern2
-      mat.list[[count]] <- mat
-      
-      next
-    } else if(sum(test == pattern2) == 2){
-      count <- count + 1
-      mat[srow, scol] <- pattern1
-      mat.list[[count]] <- mat
-      
-      next
-    } else {next}
-  }
-  
-  matrices <- lapply(mat.list, as.matrix)
-  return(permuted.matrices = matrices)
+  return(c(p1, p2))
 }
 
 
-#' @title permutes_rc
-#' @description This function generates a null distribution of matrices by maintaining row and column sums
-#' @param mat a binary matrix
-#' @param iter the number of null matrices to create. Defaults to 100
-#' @export
-#' @family null models
-
-permutes_rc <- function(mat, iter = 100){
- 
-  pattern1 <- matrix(c(0,1,1,0), nrow = 2, ncol = 2)
-  pattern2 <- matrix(c(1,0,0,1), nrow = 2, ncol = 2)
-  count <- 0
-  
-  mat.list <- list()
-  
-  while(count < iter){
-    srow <- sample(1:nrow(mat), 2)
-    scol <- sample(1:ncol(mat), 2)
-    
-    test <- mat[srow, scol]
-    
-    if(sum(test == pattern1) == 4){
-      count <- count + 1
-      mat[srow, scol] <- pattern2
-      mat.list[[count]] <- mat
-      
-      next
-    } else if(sum(test == pattern2) == 4){
-      count <- count + 1
-      mat[srow, scol] <- pattern1
-      mat.list[[count]] <- mat
-      
-      next
-    } else {next}
-  }
-  
-  matrices <- lapply(mat.list, as.matrix)
-  return(permuted.matrices = matrices)
-}
-
-
-#' @title permutes_rcd
-#' @description This function generates a null distribution of matrices by maintaining row and column sums as well as the diagonal
-#' @param mat a binary matrix
-#' @param iter the number of null matrices to create. Defaults to 100
-#' @export
-#' @family null models
-
-permutes_rcd <- function(mat, iter = 100){
-  
-  pattern1 <- matrix(c(0,1,1,0), nrow = 2, ncol = 2)
-  pattern2 <- matrix(c(1,0,0,1), nrow = 2, ncol = 2)
-  count <- 0
-  
-  mat.list <- list()
-  
-  while(count < iter){
-    
-    s <- sample(1:nrow(mat), 4)
-      
-    test <- mat[s[1:2], s[3:4]]
-    
-    if(sum(test == pattern1) == 4){
-      count <- count + 1
-      mat[s[1:2], s[3:4]] <- pattern2
-      mat.list[[count]] <- mat
-      
-      next
-    } else if(sum(test == pattern2) == 4){
-      count <- count + 1
-      mat[s[1:2], s[3:4]] <- pattern1
-      mat.list[[count]] <- mat
-      
-      next
-    } else {next}
-  }
-  
-  matrices <- lapply(mat.list, as.matrix)
-  return(permuted.matrices = matrices)
-}
-
-
-#' @title permutes_prob
-#' @description This function generates a null distribution of matrices by maintaining row and column probabilities
-#' @param mat a binary matrix
-#' @param iter the number of null matrices to create. Defaults to 100
-#' @export
-#' @family null models
-
-permutes_prob <- function(mat, iter = 100){
-  cS <- colSums(mat)/nrow(mat)
-  rS <- rowSums(mat)/ncol(mat)
-  
-  pmat <- matrix(nrow =nrow(mat), ncol = ncol(mat))
-  for(i in 1:nrow(mat)){
-    for(j in 1:ncol(mat)){
-      pmat[i,j] <- sum((rS[i]+cS[j])/2)
-    }
-  }
-  
-  mat.list <- list()
-  for(q in 1:iter){
-    mat2 <- matrix(nrow =nrow(mat), ncol = ncol(mat))
-    for(i in 1:nrow(mat)){
-      for(j in 1:ncol(mat)){
-        mat2[i,j] <- rbinom(1,1,prob = pmat[i,j])
-      }
-    }
-    mat.list[[q]] <- mat2
-  }
-  
-  return(permuted.matrices = mat.list)
-}
-
-
-#' @title make_null
-#' @description This function generates a null distribution of matrices using one of 5 methods
-#' @param mat a binary matrix
-#' @param iter the number of null matrices to create. Defaults to 100
-#' @param method which null model you want to use. Defaults to method = "rc
-#' @export
-
-make_null <- function(mat, iter = 100, method = "rc"){
-  if(method == "r"){p <- permutes_r(mat, iter)}
-  
-  if(method == "c"){p <- permutes_c(mat, iter)}
-  
-  if(method == "rc"){p <- permutes_rc(mat, iter)}
-  
-  if(method == "rcd"){p <- permutes_rcd(mat, iter)}
-  
-  if(method == "rcp"){p <- permutes_prob(mat, iter)}
-  
-  return(p)
-}
+tc1 <- sapply(1:100, function(x) testcurve(20, .1, 100000))
+tc2 <- sapply(1:100, function(x) testcurve(20, .1, 100000))
+tc3 <- sapply(1:100, function(x) testcurve(20, .1, 100000))
+tc4 <- sapply(1:100, function(x) testcurve(20, .1, 100000))
+tc5 <- sapply(1:100, function(x) testcurve(20, .1, 100000))
